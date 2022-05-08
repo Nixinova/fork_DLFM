@@ -30,6 +30,8 @@ var conf = struct {
 	} `toml:"discord"`
 	App struct {
 		Title       string `toml:"title"`
+		FirstLine   string `toml:"first_line"`
+		SecondLine  string `toml:"second_line"`
 		LargeImage  string `toml:"large_image"`
 		LargeText   string `toml:"large_text"`
 		SmallImage  string `toml:"small_image"`
@@ -63,6 +65,7 @@ func init() {
 		strs  = []*string{
 			&conf.LastFm.APIKey, &conf.LastFm.Username,
 			&conf.Discord.Token, &conf.App.Title,
+			&conf.App.FirstLine, &conf.App.SecondLine,
 			&conf.App.LargeImage, &conf.App.LargeText,
 			&conf.App.SmallImage, &conf.App.SmallText,
 		}
@@ -94,6 +97,12 @@ func init() {
 	}
 	if conf.App.Title == "" {
 		conf.App.Title = "last.fm"
+	}
+	if conf.App.FirstLine == "" {
+		conf.App.FirstLine = "{{name}}"
+	}
+	if conf.App.SecondLine == "" {
+		conf.App.SecondLine = "by {{artist}}"
 	}
 	if conf.App.LargeImage == "" {
 		conf.App.LargeImage = "{{album_image}}"
@@ -155,8 +164,8 @@ func tokenSet(dg *dgo.Session, r lrt) error {
 			Game: &dgo.Game{
 				Name:    ftitle,
 				Type:    2,
-				Details: ctrack.Name,
-				State:   "by " + ctrack.Artist.Name,
+				Details: conf.App.FirstLine,
+				State:   conf.App.SecondLine,
 			},
 		},
 	)
@@ -168,9 +177,11 @@ func appSet(_ *dgo.Session, r lrt) error {
 		return err
 	}
 	ctrack := r.Tracks[0]
-	fltext, fstext := conf.App.LargeText,
-		conf.App.SmallText
-	for _, v := range []*string{&fltext, &fstext} { // texts
+	fltext := conf.App.LargeText
+	fstext := conf.App.SmallText
+	first_line := conf.App.FirstLine
+	second_line := conf.App.SecondLine
+	for _, v := range []*string{&fltext, &fstext, &first_line, &second_line} { // texts
 		*v = strings.Replace(*v, "{{name}}", ctrack.Name, -1)
 		*v = strings.Replace(*v, "{{artist}}", ctrack.Artist.Name, -1)
 		*v = strings.Replace(*v, "{{album}}", ctrack.Album.Name, -1)
@@ -184,14 +195,10 @@ func appSet(_ *dgo.Session, r lrt) error {
 			URL:   ctrack.Url,
 		}}
 	}
-	secondary_text := "by " + ctrack.Artist.Name
-	if !strings.Contains(ctrack.Album.Name, ctrack.Name) {
-		secondary_text = "in " + ctrack.Album.Name + " by " + ctrack.Artist.Name
-	}
 	return rgo.SetActivity(
 		rgo.Activity{
-			Details:    ctrack.Name,
-			State:      secondary_text,
+			Details:    first_line,
+			State:      second_line,
 			LargeImage: flimg,
 			LargeText:  fltext,
 			SmallImage: conf.App.SmallImage,
