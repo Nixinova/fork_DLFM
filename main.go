@@ -184,10 +184,14 @@ func appSet(_ *dgo.Session, r lrt) error {
 			URL:   ctrack.Url,
 		}}
 	}
+	secondary_text := "by " + ctrack.Artist.Name
+	if !strings.Contains(ctrack.Album.Name, ctrack.Name) {
+		secondary_text = "in " + ctrack.Album.Name + " by " + ctrack.Artist.Name
+	}
 	return rgo.SetActivity(
 		rgo.Activity{
 			Details:    ctrack.Name,
-			State:      "by " + ctrack.Artist.Name,
+			State:      secondary_text,
 			LargeImage: flimg,
 			LargeText:  fltext,
 			SmallImage: conf.App.SmallImage,
