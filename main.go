@@ -185,7 +185,7 @@ func appSet(_ *dgo.Session, r lrt) error {
 		}}
 	}
 	secondary_text := "by " + ctrack.Artist.Name
-	if !strings.Contains(ctrack.Album.Name, ctrack.Name) {
+	if !strings.Contains(strings.ToLower(ctrack.Album.Name), strings.ToLower(ctrack.Name)) {
 		secondary_text = secondary_text + " in " + ctrack.Album.Name
 	}
 	return rgo.SetActivity(
